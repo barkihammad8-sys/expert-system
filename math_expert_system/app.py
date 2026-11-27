@@ -3,6 +3,15 @@
 Run from the repository root with: streamlit run math_expert_system/app.py
 """
 
+import sys
+from pathlib import Path
+
+# Ensure the repository root is on Python's import path when Streamlit
+# launches this file directly from inside the package directory.
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
 import streamlit as st
 
 from math_expert_system.core import MathematicsExpertSystem
