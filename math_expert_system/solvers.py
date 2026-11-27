@@ -1,10 +1,19 @@
 """Mathematical solvers used by the expert system."""
 
 import math
+import re
 from typing import Any, Dict
 
 
-def _sympy():
+_ALLOWED_EXPRESSION = re.compile(r"^[0-9A-Za-z_+\-*/().,\s^]+$")
+
+
+def parse_expression(expression: str):
+    """Parse a restricted arithmetic expression without exposing Python builtins."""
+    if not expression or not _ALLOWED_EXPRESSION.fullmatch(expression):
+        raise ValueError("Expression contains unsupported characters.")
+    if "__" in expression:
+        raise ValueError("Double underscores are not allowed in expressions.")
     try:
         import sympy
         from sympy.parsing.sympy_parser import (
@@ -15,13 +24,51 @@ def _sympy():
         )
     except ImportError as exc:
         raise RuntimeError("SymPy is required for algebra and calculus. Run: pip install -r requirements.txt") from exc
-    transformations = standard_transformations + (implicit_multiplication_application, convert_xor)
-    return sympy, parse_expr, transformations
+
+    # Keep eval's global namespace deliberately small. Only arithmetic
+    # constructors are available; Python builtins and attribute access are not.
+    global_dict = {
+        "__builtins__": {},
+        "Symbol": sympy.Symbol,
+        "Integer": sympy.Integer,
+        "Float": sympy.Float,
+        "Rational": sympy.Rational,
+        "Add": sympy.Add,
+        "Mul": sympy.Mul,
+        "Pow": sympy.Pow,
+    }
+    local_dict = {
+        name: sympy.Symbol(name) for name in ("x", "y", "z", "t", "a", "b", "c")
+    }
+    local_dict.update({
+        "pi": sympy.pi,
+        "E": sympy.E,
+        "sqrt": sympy.sqrt,
+        "sin": sympy.sin,
+        "cos": sympy.cos,
+        "tan": sympy.tan,
+        "log": sympy.log,
+        "exp": sympy.exp,
+        "abs": sympy.Abs,
+    })
+    transformations = standard_transformations + (
+        implicit_multiplication_application,
+        convert_xor,
+    )
+    try:
+        return sympy, parse_expr(
+            expression,
+            local_dict=local_dict,
+            global_dict=global_dict,
+            transformations=transformations,
+            evaluate=True,
+        )
+    except (SyntaxError, TypeError, ValueError, NameError) as exc:
+        raise ValueError(f"Invalid mathematical expression: {expression}") from exc
 
 
 def _parse(expression: str):
-    sympy, parse_expr, transformations = _sympy()
-    return sympy, parse_expr(expression, transformations=transformations)
+    return parse_expression(expression)
 
 
 def solve_equation(left: str, right: str) -> Dict[str, Any]:

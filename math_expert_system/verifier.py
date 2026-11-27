@@ -3,15 +3,16 @@
 import math
 from typing import Any, Dict
 
+from .solvers import parse_expression
+
 
 def verify_result(operation: str, result: Dict[str, Any], parameters: Dict[str, Any]) -> Dict[str, Any]:
     """Return a transparent verification status; never claim a check was done if it was not."""
     if operation == "solve_equation" and "solutions" in result:
         try:
-            import sympy
+            sympy, lhs = parse_expression(parameters["left"])
+            _, rhs = parse_expression(parameters["right"])
             x = sympy.Symbol("x")
-            lhs = sympy.sympify(parameters["left"].replace("^", "**"))
-            rhs = sympy.sympify(parameters["right"].replace("^", "**"))
             checks = [sympy.simplify((lhs - rhs).subs(x, value)) == 0 for value in result["solutions"]]
             return {"verified": all(checks), "details": "Substituted each reported solution into the original equation."}
         except Exception:

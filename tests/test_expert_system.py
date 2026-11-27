@@ -5,6 +5,7 @@ import unittest
 from math_expert_system.core import MathematicsExpertSystem
 from math_expert_system.inference_engine import InferenceEngine
 from math_expert_system.nlp import parse_question
+from math_expert_system.solvers import parse_expression
 
 
 class ParserTests(unittest.TestCase):
@@ -16,6 +17,10 @@ class ParserTests(unittest.TestCase):
         parsed = parse_question("area of circle radius 4")
         self.assertEqual(parsed["operation"], "circle_area")
         self.assertEqual(parsed["radius"], 4.0)
+
+    def test_expression_parser_rejects_python_code(self):
+        with self.assertRaises(ValueError):
+            parse_expression("__import__('os').system('echo unsafe')")
 
 
 class InferenceTests(unittest.TestCase):
