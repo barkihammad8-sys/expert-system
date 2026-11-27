@@ -3,6 +3,7 @@
 import unittest
 
 from math_expert_system.core import MathematicsExpertSystem
+from math_expert_system.inference_engine import InferenceEngine
 from math_expert_system.nlp import parse_question
 
 
@@ -15,6 +16,13 @@ class ParserTests(unittest.TestCase):
         parsed = parse_question("area of circle radius 4")
         self.assertEqual(parsed["operation"], "circle_area")
         self.assertEqual(parsed["radius"], 4.0)
+
+
+class InferenceTests(unittest.TestCase):
+    def test_quadratic_rule_wins_over_generic_solve_rule(self):
+        result = InferenceEngine().infer("solve x^2 - 5*x + 6 = 0")
+        self.assertEqual(result.topic, "algebra")
+        self.assertEqual(result.matched_rule.rule_id, "ALG-QUADRATIC")
 
 
 class ExpertSystemTests(unittest.TestCase):
@@ -47,6 +55,16 @@ class ExpertSystemTests(unittest.TestCase):
         result = self.system.ask("area of circle radius 4")
         self.assertTrue(result["success"], result)
         self.assertAlmostEqual(float(result["answer"]), 16 * 3.141592653589793)
+
+    def test_rectangle_area(self):
+        result = self.system.ask("area of rectangle length 5 width 3")
+        self.assertTrue(result["success"], result)
+        self.assertAlmostEqual(float(result["answer"]), 15.0)
+
+    def test_triangle_area(self):
+        result = self.system.ask("area of triangle base 10 height 6")
+        self.assertTrue(result["success"], result)
+        self.assertAlmostEqual(float(result["answer"]), 30.0)
 
     def test_trigonometry(self):
         result = self.system.ask("sin 30")
