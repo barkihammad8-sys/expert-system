@@ -1,0 +1,36 @@
+name: Extract Mathematics Expert System
+
+on:
+  push:
+    paths:
+      - ".github/workflows/extract-project.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  extract-and-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Extract project files into repository root
+        run: |
+          test -f Mathematics_Expert_System.zip
+          mkdir -p /tmp/math-expert-system
+          unzip -o Mathematics_Expert_System.zip -d /tmp/math-expert-system
+          cp -a /tmp/math-expert-system/. .
+
+      - name: Commit extracted project
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No extracted-file changes to commit."
+          else
+            git commit -m "Add complete Streamlit mathematics expert system"
+            git push
+          fi
