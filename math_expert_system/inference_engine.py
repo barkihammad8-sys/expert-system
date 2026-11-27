@@ -27,13 +27,13 @@ class InferenceEngine:
         text = self._normalise(question)
         trace = ["Received question and normalised its text."]
         ranked = []
+        highly_specific = {"x**2", "quadratic", "linear", "circle", "rectangle", "triangle"}
         for rule in self.rules:
             matches = [word for word in rule.keywords if word in text]
             if matches:
-                # Prefer a rule with more evidence, then the more specific
-                # keyword set. This prevents 'solve x**2 ...' being labelled
-                # as a linear problem merely because it contains 'solve'.
-                specificity = sum(len(word) for word in matches)
+                # Mathematical topic indicators should outweigh generic verbs
+                # such as "solve", so quadratic equations are not labelled linear.
+                specificity = sum(10 if word in highly_specific else 1 for word in matches)
                 ranked.append((len(matches), specificity, rule))
         if not ranked:
             trace.append("No knowledge-base rule matched the question.")
