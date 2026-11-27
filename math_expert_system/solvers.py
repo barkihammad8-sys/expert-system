@@ -129,7 +129,7 @@ def solve_geometry(operation: str, values: Dict[str, float]) -> Dict[str, Any]:
         result, formula = 0.5 * base * height, "A = ½ × base × height"
     else:
         raise ValueError(f"Unknown geometry operation: {operation}")
-    return {"answer": f"{result:.8g}", "numeric_answer": result, "formula": formula, "explanation": f"Substitute the given measurements into {formula}."}
+    return {"answer": f"{result:.12g}", "numeric_answer": result, "formula": formula, "explanation": f"Substitute the given measurements into {formula}."}
 
 
 def solve_trig(function: str, angle: float) -> Dict[str, Any]:
