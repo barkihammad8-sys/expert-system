@@ -38,14 +38,18 @@ if st.button("Calculate", type="primary", use_container_width=True):
         response = st.session_state.expert_system.ask(question)
         if response["success"]:
             st.success("Answer")
-            if response.get("latex_answer"):
-                st.latex(response["latex_answer"])
-            else:
-                st.markdown(f"**{response['answer']}**")
-
-            if response.get("numeric_answer") and response["numeric_answer"] != response["answer"]:
-                st.markdown("**Decimal / numerical form**")
+            if response.get("numeric_answer") and response["operation"] == "solve_equation":
+                st.markdown("**Numerical answer**")
                 st.write(response["numeric_answer"])
+                with st.expander("Show exact answer"):
+                    if response.get("latex_answer"):
+                        st.latex(response["latex_answer"])
+                    st.write(response["answer"])
+            else:
+                if response.get("latex_answer"):
+                    st.latex(response["latex_answer"])
+                else:
+                    st.markdown(f"**{response['answer']}**")
 
             if response.get("formula"):
                 st.caption(f"Formula: {response['formula']}")
