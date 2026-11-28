@@ -83,7 +83,7 @@ def solve_equation(left: str, right: str) -> Dict[str, Any]:
     # internally for verification.
     try:
         degree = sympy.Poly(equation_expression, x).degree()
-    except sympy.Polys.PolynomialError:
+    except (sympy.polys.polyerrors.PolynomialError, TypeError):
         degree = None
     display_solutions = []
     for value in solutions:
