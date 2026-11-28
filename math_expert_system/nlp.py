@@ -9,11 +9,7 @@ def _number(text: str) -> float:
 
 
 def parse_question(question: str) -> Dict[str, Any]:
-    """Convert a supported question into a structured operation.
-
-    The parser intentionally accepts a documented set of patterns. It does not
-    pretend to understand arbitrary conversational language.
-    """
+    """Convert a supported question into a structured operation."""
     text = question.strip().lower().replace("−", "-").replace("^", "**")
     if not text:
         raise ValueError("Please enter a mathematics question.")
@@ -54,16 +50,22 @@ def parse_question(question: str) -> Dict[str, Any]:
         if base and height:
             return {"operation": "triangle_area", "base": _number(base.group(1)), "height": _number(height.group(1))}
 
-    # Equations: solve 2*x + 3 = 7, or solve x**2 - 5*x + 6 = 0.
+    # Equations: solve 2*x + 3 = 7, or solve x**3 - 5*x + 6 = 0.
     equation = re.search(r"(?:solve\s+)?(.+?)\s*=\s*(.+)", text)
     if equation:
         return {"operation": "solve_equation", "left": equation.group(1).strip(), "right": equation.group(2).strip()}
 
-    # Symbolic simplification.
+    # Symbolic simplification must be explicit so a bare expression is not
+    # unexpectedly changed into an equation.
     expression = re.search(r"(?:simplify|simplification\s+of)\s+(.+)", text)
     if expression:
         return {"operation": "simplify", "expression": expression.group(1).strip()}
 
+    # A bare polynomial in x is treated as an equation equal to zero. This
+    # makes common inputs such as 2x^3 + 3x^2 + 5x + 6 directly solvable.
+    if "x" in text and re.fullmatch(r"[0-9a-z_+*/().,\s-]+", text):
+        return {"operation": "solve_equation", "left": text, "right": "0"}
+
     raise ValueError(
-        "I could not understand that question. Type 'help' to see supported examples."
+        "I could not understand that question. Enter an equation such as 'solve x^3 - 2*x = 0', or use 'differentiate', 'integrate', or 'simplify'."
     )
