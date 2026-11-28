@@ -25,8 +25,6 @@ def parse_expression(expression: str):
     except ImportError as exc:
         raise RuntimeError("SymPy is required for algebra and calculus. Run: pip install -r requirements.txt") from exc
 
-    # Keep eval's global namespace deliberately small. Only arithmetic
-    # constructors are available; Python builtins and attribute access are not.
     global_dict = {
         "__builtins__": {},
         "Symbol": sympy.Symbol,
@@ -75,13 +73,30 @@ def solve_equation(left: str, right: str) -> Dict[str, Any]:
     sympy, lhs = _parse(left)
     _, rhs = _parse(right)
     x = sympy.Symbol("x")
+    equation_expression = sympy.expand(lhs - rhs)
     solutions = sympy.solve(sympy.Eq(lhs, rhs), x)
     if not solutions:
         return {"answer": "No solution found for x.", "explanation": f"Set {left} equal to {right} and solve for x."}
+
+    # Keep exact rational roots, but show readable decimal approximations for
+    # irrational/complex cubic roots. The exact SymPy values remain available
+    # internally for verification.
+    try:
+        degree = sympy.Poly(equation_expression, x).degree()
+    except sympy.Polys.PolynomialError:
+        degree = None
+    display_solutions = []
+    for value in solutions:
+        if degree == 3 and not value.is_Rational:
+            display_solutions.append(f"x ≈ {sympy.N(value, 8)}")
+        else:
+            display_solutions.append(f"x = {sympy.simplify(value)}")
+
+    degree_note = " This is a cubic equation, so the solver checks all three roots (including complex roots)." if degree == 3 else ""
     return {
-        "answer": ", ".join(f"x = {sympy.simplify(value)}" for value in solutions),
+        "answer": ", ".join(display_solutions),
         "solutions": solutions,
-        "explanation": f"Rearrange the equation {left} = {right}, then solve it for x.",
+        "explanation": f"Rearrange the equation {left} = {right}, then solve it for x.{degree_note}",
     }
 
 
