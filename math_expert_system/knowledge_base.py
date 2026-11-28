@@ -6,7 +6,7 @@ from typing import Tuple
 
 @dataclass(frozen=True)
 class Rule:
-    """A simple production rule used by the inference engine."""
+    """A simple production rule used by the expert system."""
 
     rule_id: str
     topic: str
@@ -17,7 +17,8 @@ class Rule:
 RULES = (
     Rule("ALG-LINEAR", "algebra", ("solve", "equation", "linear"), "Solve a one-variable linear equation."),
     Rule("ALG-QUADRATIC", "algebra", ("quadratic", "x^2", "x**2"), "Solve a quadratic equation."),
-    Rule("CAL-DIFF", "calculus", ("differentiate", "derivative", "differentiate"), "Differentiate an expression symbolically."),
+    Rule("ALG-CUBIC", "algebra", ("cubic", "x^3", "x**3", "degree 3"), "Solve a cubic equation (degree three)."),
+    Rule("CAL-DIFF", "calculus", ("differentiate", "derivative"), "Differentiate an expression symbolically."),
     Rule("CAL-INTEGRATE", "calculus", ("integrate", "integral", "antiderivative"), "Integrate an expression symbolically."),
     Rule("GEO-CIRCLE", "geometry", ("circle", "radius"), "Calculate circle area or circumference."),
     Rule("GEO-RECTANGLE", "geometry", ("rectangle", "length", "width"), "Calculate rectangle area or perimeter."),
