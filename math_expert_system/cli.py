@@ -5,6 +5,8 @@ from .core import MathematicsExpertSystem
 EXAMPLES = [
     "solve 2*x + 3 = 7",
     "solve x^2 - 5*x + 6 = 0",
+    "solve x^3 - 6*x^2 + 11*x - 6 = 0",
+    "2x^3 + 3x^2 + 5x + 6",
     "differentiate x^3 + 2*x",
     "integrate 3*x^2",
     "area of circle radius 4",
@@ -21,7 +23,7 @@ def show_help():
     print("\nSupported examples:")
     for example in EXAMPLES:
         print(f"  • {example}")
-    print("Use ^ or ** for powers. Angles are in degrees.\n")
+    print("Use ^ or ** for powers. A bare polynomial in x is treated as equal to zero. Angles are in degrees.\n")
 
 
 def main():
