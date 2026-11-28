@@ -13,6 +13,12 @@ class ParserTests(unittest.TestCase):
         parsed = parse_question("solve 2*x + 3 = 7")
         self.assertEqual(parsed["operation"], "solve_equation")
 
+    def test_bare_cubic_polynomial_is_treated_as_zero_equation(self):
+        parsed = parse_question("2x^3+3x^2+5x+6")
+        self.assertEqual(parsed["operation"], "solve_equation")
+        self.assertEqual(parsed["left"], "2x**3+3x**2+5x+6")
+        self.assertEqual(parsed["right"], "0")
+
     def test_circle_is_parsed(self):
         parsed = parse_question("area of circle radius 4")
         self.assertEqual(parsed["operation"], "circle_area")
@@ -29,6 +35,11 @@ class InferenceTests(unittest.TestCase):
         self.assertEqual(result.topic, "algebra")
         self.assertEqual(result.matched_rule.rule_id, "ALG-QUADRATIC")
 
+    def test_cubic_rule_wins_when_polynomial_contains_x_cubed_and_x_squared(self):
+        result = InferenceEngine().infer("2x^3+3x^2+5x+6")
+        self.assertEqual(result.topic, "algebra")
+        self.assertEqual(result.matched_rule.rule_id, "ALG-CUBIC")
+
 
 class ExpertSystemTests(unittest.TestCase):
     @classmethod
@@ -43,6 +54,20 @@ class ExpertSystemTests(unittest.TestCase):
     def test_quadratic_equation(self):
         result = self.system.ask("solve x^2 - 5*x + 6 = 0")
         self.assertTrue(result["success"], result)
+        self.assertIn("x = 2", result["answer"])
+        self.assertIn("x = 3", result["answer"])
+
+    def test_bare_cubic_polynomial(self):
+        result = self.system.ask("2x^3+3x^2+5x+6")
+        self.assertTrue(result["success"], result)
+        self.assertEqual(result["operation"], "solve_equation")
+        self.assertTrue(result["verification"]["verified"])
+        self.assertIn("ALG-CUBIC", " ".join(result["reasoning_trace"]))
+
+    def test_cubic_equation_with_three_real_roots(self):
+        result = self.system.ask("solve x^3 - 6*x^2 + 11*x - 6 = 0")
+        self.assertTrue(result["success"], result)
+        self.assertIn("x = 1", result["answer"])
         self.assertIn("x = 2", result["answer"])
         self.assertIn("x = 3", result["answer"])
 
