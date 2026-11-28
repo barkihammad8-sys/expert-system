@@ -27,13 +27,21 @@ class InferenceEngine:
         text = self._normalise(question)
         trace = ["Received question and normalised its text."]
         ranked = []
-        highly_specific = {"x**2", "quadratic", "linear", "circle", "rectangle", "triangle"}
+        specificity_weights = {
+            "x**3": 30,
+            "cubic": 30,
+            "x**2": 20,
+            "quadratic": 20,
+            "linear": 10,
+            "circle": 10,
+            "rectangle": 10,
+            "triangle": 10,
+        }
         for rule in self.rules:
             matches = [word for word in rule.keywords if word in text]
             if matches:
-                # Mathematical topic indicators should outweigh generic verbs
-                # such as "solve", so quadratic equations are not labelled linear.
-                specificity = sum(10 if word in highly_specific else 1 for word in matches)
+                # Degree-specific polynomial rules outrank generic solve rules.
+                specificity = sum(specificity_weights.get(word, 1) for word in matches)
                 ranked.append((len(matches), specificity, rule))
         if not ranked:
             trace.append("No knowledge-base rule matched the question.")
