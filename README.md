@@ -6,7 +6,7 @@ A beginner-friendly, rule-based Mathematics Expert System built in Python. It ac
 
 - Natural-language question handling for documented question patterns.
 - Rule-based inference engine with a traceable reasoning path.
-- Algebra: linear and quadratic equations and symbolic simplification.
+- Algebra: linear, quadratic, and cubic equations (including complex roots), plus symbolic simplification.
 - Calculus: symbolic differentiation and integration using SymPy.
 - Geometry: circle, rectangle, and triangle calculations.
 - Trigonometry: sine, cosine, and tangent (angles in degrees).
@@ -93,6 +93,8 @@ If the app is not found, check that the selected branch contains the `math_exper
 
 - `solve 2*x + 3 = 7`
 - `solve x^2 - 5*x + 6 = 0`
+- `solve x^3 - 6*x^2 + 11*x - 6 = 0`
+- `2x^3 + 3x^2 + 5x + 6` (a bare polynomial is treated as an equation equal to zero)
 - `differentiate x^3 + 2*x`
 - `integrate 3*x^2`
 - `area of circle radius 4`
@@ -103,7 +105,7 @@ If the app is not found, check that the selected branch contains the `math_exper
 - `cos 60`
 - `simplify x + x + 2`
 
-Use `help` in the terminal application to see examples, or `quit` to exit. Use `^` or `**` for powers.
+Use `help` in the terminal application to see examples, or `quit` to exit. Use `^` or `**` for powers. A bare polynomial in `x` is interpreted as an equation equal to zero; type `differentiate`, `integrate`, or `simplify` explicitly when you want one of those operations.
 
 ## Run automated tests
 
