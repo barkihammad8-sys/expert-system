@@ -48,6 +48,8 @@ class MathematicsExpertSystem:
                 "topic": inference.topic or operation,
                 "operation": operation,
                 "answer": result["answer"],
+                "latex_answer": result.get("latex_answer"),
+                "numeric_answer": result.get("numeric_answer"),
                 "explanation": result.get("explanation", ""),
                 "formula": result.get("formula"),
                 "verification": verification,
