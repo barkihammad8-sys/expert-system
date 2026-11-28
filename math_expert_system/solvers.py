@@ -69,6 +69,11 @@ def _parse(expression: str):
     return parse_expression(expression)
 
 
+def _decimal(value, sympy, digits=10):
+    """Return a readable decimal approximation, including complex values."""
+    return str(sympy.N(value, digits))
+
+
 def solve_equation(left: str, right: str) -> Dict[str, Any]:
     sympy, lhs = _parse(left)
     _, rhs = _parse(right)
@@ -76,25 +81,31 @@ def solve_equation(left: str, right: str) -> Dict[str, Any]:
     equation_expression = sympy.expand(lhs - rhs)
     solutions = sympy.solve(sympy.Eq(lhs, rhs), x)
     if not solutions:
-        return {"answer": "No solution found for x.", "explanation": f"Set {left} equal to {right} and solve for x."}
+        return {
+            "answer": "No solution",
+            "latex_answer": r"\text{No solution}",
+            "explanation": f"Set {left} equal to {right} and solve for x.",
+        }
 
-    # Keep exact rational roots, but show readable decimal approximations for
-    # irrational/complex cubic roots. The exact SymPy values remain available
-    # internally for verification.
+    display_solutions = []
+    decimal_solutions = []
+    latex_solutions = []
     try:
         degree = sympy.Poly(equation_expression, x).degree()
     except (sympy.polys.polyerrors.PolynomialError, TypeError):
         degree = None
-    display_solutions = []
-    for value in solutions:
-        if degree == 3 and not value.is_Rational:
-            display_solutions.append(f"x ≈ {sympy.N(value, 8)}")
-        else:
-            display_solutions.append(f"x = {sympy.simplify(value)}")
 
-    degree_note = " This is a cubic equation, so the solver checks all three roots (including complex roots)." if degree == 3 else ""
+    for value in solutions:
+        exact = sympy.simplify(value)
+        display_solutions.append(f"x = {exact}")
+        decimal_solutions.append(f"x ≈ {_decimal(value, sympy, 10)}")
+        latex_solutions.append("x = " + sympy.latex(exact))
+
+    degree_note = " This is a cubic equation; all solutions returned by the symbolic solver are listed." if degree == 3 else ""
     return {
-        "answer": ", ".join(display_solutions),
+        "answer": "; ".join(display_solutions),
+        "latex_answer": r",\quad ".join(latex_solutions),
+        "numeric_answer": "; ".join(decimal_solutions),
         "solutions": solutions,
         "explanation": f"Rearrange the equation {left} = {right}, then solve it for x.{degree_note}",
     }
@@ -104,20 +115,33 @@ def differentiate(expression: str, variable: str = "x") -> Dict[str, Any]:
     sympy, expr = _parse(expression)
     symbol = sympy.Symbol(variable)
     result = sympy.diff(expr, symbol)
-    return {"answer": str(result), "explanation": f"Differentiate {expression} with respect to {variable} using the power and derivative rules."}
+    return {
+        "answer": str(result),
+        "latex_answer": sympy.latex(result),
+        "explanation": f"Differentiate {expression} with respect to {variable} using the power and derivative rules.",
+    }
 
 
 def integrate(expression: str, variable: str = "x") -> Dict[str, Any]:
     sympy, expr = _parse(expression)
     symbol = sympy.Symbol(variable)
     result = sympy.integrate(expr, symbol)
-    return {"answer": f"{result} + C", "explanation": f"Find an antiderivative of {expression} with respect to {variable}. C is the constant of integration."}
+    answer = f"{result} + C"
+    return {
+        "answer": answer,
+        "latex_answer": sympy.latex(result) + r" + C",
+        "explanation": f"Find an antiderivative of {expression} with respect to {variable}. C is the constant of integration.",
+    }
 
 
 def simplify(expression: str) -> Dict[str, Any]:
     sympy, expr = _parse(expression)
     result = sympy.simplify(expr)
-    return {"answer": str(result), "explanation": f"SymPy simplified the expression {expression}."}
+    return {
+        "answer": str(result),
+        "latex_answer": sympy.latex(result),
+        "explanation": f"SymPy simplified the expression {expression}.",
+    }
 
 
 def solve_geometry(operation: str, values: Dict[str, float]) -> Dict[str, Any]:
@@ -144,7 +168,13 @@ def solve_geometry(operation: str, values: Dict[str, float]) -> Dict[str, Any]:
         result, formula = 0.5 * base * height, "A = ½ × base × height"
     else:
         raise ValueError(f"Unknown geometry operation: {operation}")
-    return {"answer": f"{result:.12g}", "numeric_answer": result, "formula": formula, "explanation": f"Substitute the given measurements into {formula}."}
+    return {
+        "answer": f"{result:.12g}",
+        "numeric_answer": result,
+        "latex_answer": f"{result:.12g}",
+        "formula": formula,
+        "explanation": f"Substitute the given measurements into {formula}.",
+    }
 
 
 def solve_trig(function: str, angle: float) -> Dict[str, Any]:
@@ -155,4 +185,16 @@ def solve_trig(function: str, angle: float) -> Dict[str, Any]:
     if function == "tan" and math.isclose(math.cos(radians), 0.0, abs_tol=1e-12):
         raise ValueError("Tangent is undefined for this angle.")
     result = functions[function](radians)
-    return {"answer": f"{result:.8g}", "numeric_answer": result, "formula": f"{function}({angle}°)", "explanation": "Convert the angle from degrees to radians, then evaluate the trigonometric function."}
+    if math.isclose(result, 0.0, abs_tol=1e-12):
+        result = 0.0
+    elif math.isclose(result, 1.0, abs_tol=1e-12):
+        result = 1.0
+    elif math.isclose(result, -1.0, abs_tol=1e-12):
+        result = -1.0
+    return {
+        "answer": f"{result:.8g}",
+        "numeric_answer": result,
+        "latex_answer": f"{result:.8g}",
+        "formula": f"{function}({angle}°)",
+        "explanation": "Convert the angle from degrees to radians, then evaluate the trigonometric function.",
+    }
